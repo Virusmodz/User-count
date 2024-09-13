@@ -1,1 +1,106 @@
-123
+-- Load layout for the activity
+local layout = loadlayout("layout")
+activity.setContentView(layout)
+
+-- Function to display a banner with app details
+local function displayBanner()
+  banner.setText("********************\nApp By Virus Modz\n********************")
+end
+
+-- Call the function to display the banner
+displayBanner()
+
+-- Define possible results for the period type
+local periodTypes = {"SMALL", "GREEN", "SMALL", "RED", "BIG", "GREEN", "BIG", "RED"}
+
+-- Function to generate and display the current period
+local function generatePeriod()
+  -- Get the current time and date
+  local now = os.date("*t")
+
+  -- Extract hours and minutes
+  local hours = now.hour
+  local minutes = now.min
+
+  -- Calculate total minutes and format them
+  local totalMinutes = (hours * 60) + minutes + 1
+  local totalMinutesFormatted = string.format("%04d", totalMinutes)
+
+  -- Generate the current period string
+  local currentDate = os.date("%Y%m%d")
+  local currentPeriod = currentDate .. "01" .. totalMinutesFormatted
+
+  -- Select a random period type
+  local periodType = periodTypes[math.random(#periodTypes)]
+
+  -- Update the TextView with the result
+  period_display.setText("Current Period: " .. currentPeriod .. " (" .. periodType .. ")")
+end
+
+-- Set button to generate a new period on click, but only allow one-time click
+generate_btn.onClick = function()
+  generatePeriod() -- Generate the period
+  generate_btn.setEnabled(false) -- Disable the button after the first click
+end
+
+-- Function to simulate button click when the time changes
+local function autoClickButton()
+  generate_btn.performClick()
+end
+
+-- Create an instance of BroadcastReceiver to listen for time changes
+local TimeChangeReceiver = luajava.bindClass("android.content.BroadcastReceiver")
+
+-- Define the receiver logic for time tick (minute change)
+local receiver = luajava.new(TimeChangeReceiver, {
+  onReceive = function(context, intent)
+    if intent.getAction() == Intent.ACTION_TIME_TICK then
+      autoClickButton() -- Simulate button click on time tick
+    end
+  end
+})
+
+-- Register the BroadcastReceiver for system time changes
+local filter = IntentFilter()
+filter.addAction(Intent.ACTION_TIME_TICK)
+activity.registerReceiver(receiver, filter)
+
+-- Display a toast message
+Toast.makeText(activity, "after click VRJS automatic click generator", Toast.LENGTH_LONG)
+.setGravity(Gravity.BOTTOM, 0, 0)
+.show()
+
+-- Function to apply color animation on a view's text
+local function applyColorAnimation(view)
+  local color1 = 0xFFFFFF00
+  local color2 = 0xFFFF0000
+  local color3 = 0xFFFFFF00
+  local color4 = 0xFFFF6600
+
+  local colorAnim = ObjectAnimator.ofInt(view, "textColor", {color1, color2, color3, color4})
+  colorAnim.setDuration(3000)
+  colorAnim.setEvaluator(ArgbEvaluator())
+  colorAnim.setRepeatCount(ValueAnimator.INFINITE)
+  colorAnim.setRepeatMode(ValueAnimator.REVERSE)
+  colorAnim.start()
+end
+
+-- Apply color animation to the period display TextView
+applyColorAnimation(period_display)
+
+-- Function to create circular buttons with custom colors
+local function createCircularButton(view, insideColor, radius)
+  
+  local drawable = GradientDrawable()
+  drawable.setShape(GradientDrawable.RECTANGLE)
+  drawable.setColor(insideColor)
+  drawable.setCornerRadii({radius, radius, radius, radius, radius, radius, radius, radius})
+
+  view.setBackgroundDrawable(drawable)
+end
+
+-- Style the button and period display
+createCircularButton(generate_btn, 0x00FFFFFF, 100) -- Button with orange color
+createCircularButton(period_display, 0xBE000000, 30) -- Period display with black background
+
+
